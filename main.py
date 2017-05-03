@@ -19,9 +19,9 @@ class BlogHandler(webapp2.RequestHandler):
             Get all posts by a specific user, ordered by creation date (descending).
             The user parameter will be a User object.
         """
-
+        query = Post.all().filter("author", user).order('-created')
         # TODO - filter the query so that only posts by the given user
-        return None
+        return query.fetch(limit=limit, offset=offset)
 
     def get_user_by_name(self, username):
         """ Get a user object from the db, based on their username """
@@ -37,6 +37,7 @@ class BlogHandler(webapp2.RequestHandler):
     def logout_user(self):
         """ Logout a user specified by a User object user """
         self.set_secure_cookie('user_id', '')
+        self.user = ''
 
     def read_secure_cookie(self, name):
         cookie_val = self.request.cookies.get(name)
@@ -124,7 +125,11 @@ class NewPostHandler(BlogHandler):
         self.response.out.write(response)
 
     def get(self):
-        self.render_form()
+        if not self.user:
+            self.redirect("/login")
+            return
+        else:
+            self.render_form()
 
     def post(self):
         """ Create a new blog post if possible. Otherwise, return with an error message """
@@ -258,7 +263,7 @@ class SignupHandler(BlogHandler):
 
 class LoginHandler(BlogHandler):
 
-    # TODO - The login code here is mostly set up for you, but there isn't a template to log in
+    # TODO - The login code here is mostly set up for you, but there isn't a template to log in "done"
 
     def render_login_form(self, error=""):
         """ Render the login form with or without an error, based on parameters """
